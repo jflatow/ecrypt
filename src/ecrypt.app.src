@@ -1,0 +1,4 @@
+%% -*- erlang -*-
+{application, ecrypt,
+ [{vsn, []},
+  {applications, [kernel, stdlib, crypto]}]}.
