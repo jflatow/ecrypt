@@ -166,9 +166,9 @@ ErlProc_start(ErlNifEnv *env) {
     goto error;
   if (!(proc->msgs = queue_new()))
     goto error;
-  if (!(proc->opts = enif_thread_opts_create("discodb_opts")))
+  if (!(proc->opts = enif_thread_opts_create("ecrypt_opts")))
     goto error;
-  if (enif_thread_create("discodb", &proc->tid, &ErlProc_run, proc, proc->opts))
+  if (enif_thread_create("ecrypt", &proc->tid, &ErlProc_run, proc, proc->opts))
     goto error;
   return proc;
 
