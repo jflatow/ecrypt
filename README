@@ -1,0 +1,13 @@
+Currently only supports bcrypt (via NIF).
+
+bcrypt
+======
+
+Start a proc::
+      Proc = bcrypt:init()
+
+Create the hash::
+      Hash = bcrypt:hash(Proc, "password")
+
+Check the password::
+      Hash = bcrypt:hash(Proc, {"password", Hash})
