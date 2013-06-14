@@ -70,11 +70,10 @@ ErlBCrypt_hash_async(ErlProc *proc, Message *msg) {
 
   char hash[BCRYPT_HASHLEN] = {0};
   bcrypt_hash(hash, (char *)data.data, data.size, (char *)salt.data);
-  size_t len = strnlen(hash, sizeof(hash));
 
   ERL_NIF_TERM term;
-  unsigned char *buf = enif_make_new_binary(env, len, &term);
-  memcpy(buf, hash, len);
+  unsigned char *buf = enif_make_new_binary(env, sizeof(hash), &term);
+  memcpy(buf, hash, sizeof(hash));
   return ASYNC(term);
 }
 
@@ -86,15 +85,14 @@ ErlBCrypt_salt_async(ErlProc *proc, Message *msg) {
   if (!enif_get_uint(env, msg->term, &log_rounds))
     return ASYNC(ERROR_BADARG);
 
-  unsigned char csalt[BCRYPT_MAXSALT] = {0};
+  unsigned char csalt[BCRYPT_CSALTLEN] = {0};
   char salt[BCRYPT_SALTLEN] = {0};
   arc4random_buf(csalt, sizeof(csalt));
-  bcrypt_salt(salt, csalt, sizeof(csalt), log_rounds);
-  size_t len = strnlen(salt, sizeof(salt));
+  bcrypt_salt(salt, csalt, log_rounds);
 
   ERL_NIF_TERM term;
-  unsigned char *buf = enif_make_new_binary(env, len, &term);
-  memcpy(buf, salt, len);
+  unsigned char *buf = enif_make_new_binary(env, sizeof(salt), &term);
+  memcpy(buf, salt, sizeof(salt));
   return ASYNC(term);
 }
 

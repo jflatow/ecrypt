@@ -115,7 +115,7 @@ decode_base64(u_int8_t *buffer, u_int16_t len, u_int8_t *data)
 }
 
 char *
-bcrypt_salt(char *salt, u_int8_t *csalt, u_int16_t clen, u_int8_t logr)
+bcrypt_salt(char *salt, u_int8_t *csalt, u_int8_t logr)
 {
 	salt[0] = '$';
 	salt[1] = BCRYPT_VERSION;
@@ -124,7 +124,7 @@ bcrypt_salt(char *salt, u_int8_t *csalt, u_int16_t clen, u_int8_t logr)
 
 	snprintf(salt + 4, 4, "%2.2u$", logr);
 
-	encode_base64((u_int8_t *) salt + 7, csalt, clen);
+	encode_base64((u_int8_t *) salt + 7, csalt, BCRYPT_CSALTLEN);
         return salt;
 }
 /* We handle $Vers$log2(NumRounds)$salt+passwd$
@@ -136,9 +136,9 @@ bcrypt_hash(char *encrypted, const char *key, size_t len, const char *salt)
 	blf_ctx state;
 	u_int32_t rounds, i, k;
 	u_int16_t j;
-	u_int8_t key_len, salt_len, logr, minor;
+	u_int8_t logr, minor;
 	u_int8_t ciphertext[4 * BCRYPT_BLOCKS] = "OrpheanBeholderScryDoubt";
-	u_int8_t csalt[BCRYPT_MAXSALT];
+	u_int8_t csalt[BCRYPT_CSALTLEN];
 	u_int32_t cdata[BCRYPT_BLOCKS];
 	int n;
 
@@ -180,21 +180,15 @@ bcrypt_hash(char *encrypted, const char *key, size_t len, const char *salt)
 	/* Discard num rounds + "$" identifier */
 	salt += 3;
 
-	if (strlen(salt) * 3 / 4 < BCRYPT_MAXSALT)
-		return NULL;
-
 	/* We dont want the base64 salt but the raw data */
-	decode_base64(csalt, BCRYPT_MAXSALT, (u_int8_t *) salt);
-	salt_len = BCRYPT_MAXSALT;
-	key_len = strlen(key) + (minor >= 'a' ? 1 : 0);
+	decode_base64(csalt, BCRYPT_CSALTLEN, (u_int8_t *) salt);
 
 	/* Setting up S-Boxes and Subkeys */
 	Blowfish_initstate(&state);
-	Blowfish_expandstate(&state, csalt, salt_len,
-	    (u_int8_t *) key, key_len);
+	Blowfish_expandstate(&state, csalt, BCRYPT_CSALTLEN, (u_int8_t *) key, len);
 	for (k = 0; k < rounds; k++) {
-		Blowfish_expand0state(&state, (u_int8_t *) key, key_len);
-		Blowfish_expand0state(&state, csalt, salt_len);
+          Blowfish_expand0state(&state, (u_int8_t *) key, len);
+          Blowfish_expand0state(&state, csalt, BCRYPT_CSALTLEN);
 	}
 
 	/* This can be precomputed later */
@@ -226,9 +220,9 @@ bcrypt_hash(char *encrypted, const char *key, size_t len, const char *salt)
 
 	snprintf(encrypted + i, 4, "%2.2u$", logr);
 
-	encode_base64((u_int8_t *) encrypted + i + 3, csalt, BCRYPT_MAXSALT);
-	encode_base64((u_int8_t *) encrypted + strlen(encrypted), ciphertext,
-	    4 * BCRYPT_BLOCKS - 1);
+        i += 3;
+	encode_base64((u_int8_t *) encrypted + i, csalt, BCRYPT_CSALTLEN);
+	encode_base64((u_int8_t *) encrypted + i + strnlen(encrypted, BCRYPT_HASHLEN), ciphertext, 4 * BCRYPT_BLOCKS - 1);
 	memset(&state, 0, sizeof(state));
 	memset(ciphertext, 0, sizeof(ciphertext));
 	memset(csalt, 0, sizeof(csalt));

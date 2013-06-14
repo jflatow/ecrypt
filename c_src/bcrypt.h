@@ -84,11 +84,11 @@ u_int32_t Blowfish_stream2word(const u_int8_t *, u_int16_t , u_int16_t *);
 #define BCRYPT_VERSION '2'
 #define BCRYPT_BLOCKS    6	/* Ciphertext blocks */
 #define BCRYPT_MINROUNDS 16	/* we have log2(rounds) in salt */
-#define BCRYPT_MAXSALT   16
-#define BCRYPT_SALTLEN   (7 + (BCRYPT_MAXSALT * 4 + 2) / 3 + 1)
+#define BCRYPT_CSALTLEN   16
+#define BCRYPT_SALTLEN   (7 + (BCRYPT_CSALTLEN * 4 + 2) / 3 + 1)
 #define BCRYPT_HASHLEN   128
 
-char *bcrypt_salt(char *, u_int8_t *, u_int16_t, u_int8_t);
+char *bcrypt_salt(char *, u_int8_t *, u_int8_t);
 char *bcrypt_hash(char *, const char *, size_t, const char *);
 
 #endif
