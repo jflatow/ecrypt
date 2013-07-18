@@ -1,9 +1,13 @@
+#include <fcntl.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include "erl_nif.h"
 #include "bcrypt.h"
 #include "queue.h"
+
+/* Fill a random buffer, without deps */
+#define random_buf(buf, len) do { int fd = open("/dev/urandom", O_RDONLY); read(fd, buf, len); close(fd); } while(0)
 
 /* Static Erlang Terms */
 
@@ -87,7 +91,7 @@ ErlBCrypt_salt_async(ErlProc *proc, Message *msg) {
 
   unsigned char csalt[BCRYPT_CSALTLEN] = {0};
   char salt[BCRYPT_SALTLEN] = {0};
-  arc4random_buf(csalt, sizeof(csalt));
+  random_buf(csalt, sizeof(csalt));
   bcrypt_salt(salt, csalt, log_rounds);
 
   ERL_NIF_TERM term;
